@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+uploads/*
+!uploads/README.txt
+reports/*
+!reports/README.txt
+database/*.db
+.env

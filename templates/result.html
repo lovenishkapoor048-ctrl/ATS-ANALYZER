@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Your ATS Score{% endblock %}
+
+{% set tier = 'tier-good' if analysis.overall_score >= 80 else ('tier-ok' if analysis.overall_score >= 60 else 'tier-low') %}
+{% set tier_color = '#1F9D6C' if tier == 'tier-good' else ('#B9791A' if tier == 'tier-ok' else '#C43D2A') %}
+{% block content %}
+<section class="result-header">
+  <div class="score-hero card {{ tier }}">
+    <div class="score-ring-wrap">
+      <div class="donut-ring" style="background: conic-gradient({{ tier_color }} {{ analysis.overall_score * 3.6 }}deg, var(--border) 0deg);"></div>
+      <div class="score-ring-label">
+        <span class="score-number">{{ analysis.overall_score }}</span>
+        <span class="score-out-of">/ 100</span>
+      </div>
+    </div>
+    <div class="score-summary">
+      <span class="eyebrow">{{ analysis.job_title }} &middot; {{ analysis.domain }} profile</span>
+      <h1>
+        {% if analysis.overall_score >= 80 %}Excellent — you're ATS-ready
+        {% elif analysis.overall_score >= 60 %}Good, but there's room to improve
+        {% else %}Needs work before you apply
+        {% endif %}
+      </h1>
+      <p>
+        {% if analysis.used_job_description %}
+          Scored against the job description you provided.
+        {% else %}
+          No job description was provided — scored against common skills expected for a
+          <strong>{{ analysis.domain }}</strong> role.
+        {% endif %}
+        Word count: {{ analysis.word_count }}.
+      </p>
+      <a href="{{ url_for('index') }}" class="btn-secondary">Scan another resume</a>
+    </div>
+  </div>
+</section>
+
+<section class="category-tiles">
+  {% for label, value in analysis.category_scores.items() %}
+    {% set tile_tier = 'tile-good' if value >= 80 else ('tile-ok' if value >= 60 else 'tile-low') %}
+    <div class="tile {{ tile_tier }}">
+      <div class="tile-icon">
+        {% if 'Keyword' in label %}&#128269;
+        {% elif 'Format' in label %}&#128196;
+        {% elif 'Experience' in label %}&#128188;
+        {% else %}&#9998;
+        {% endif %}
+      </div>
+      <div class="tile-label">{{ label }}</div>
+      <div class="tile-value">{{ value }}</div>
+      <div class="tile-bar"><div class="tile-bar-fill" style="width: {{ value }}%;"></div></div>
+    </div>
+  {% endfor %}
+</section>
+
+{% set total_kw = (analysis.matched_keywords|length) + (analysis.missing_keywords|length) %}
+{% set matched_pct = ((analysis.matched_keywords|length) / total_kw * 100) if total_kw > 0 else 0 %}
+<section class="charts-grid">
+  <div class="card lift chart-card">
+    <h3>Score breakdown by category</h3>
+    <div class="bar-chart">
+      {% for label, value in analysis.category_scores.items() %}
+        {% set bar_tier = 'tile-good' if value >= 80 else ('tile-ok' if value >= 60 else 'tile-low') %}
+        <div class="bar-row">
+          <span class="bar-label">{{ label }}</span>
+          <div class="bar-track">
+            <div class="bar-fill {{ bar_tier }}" style="width: {{ value }}%;"></div>
+          </div>
+          <span class="bar-value">{{ value }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card lift chart-card">
+    <h3>Keyword coverage</h3>
+    <div class="pie-chart-wrap">
+      <div class="pie-chart" style="background: conic-gradient(var(--green) {{ matched_pct * 3.6 }}deg, var(--amber) 0deg);"></div>
+      <div class="pie-legend">
+        <div class="pie-legend-item"><span class="pie-swatch" style="background: var(--green);"></span> Matched ({{ analysis.matched_keywords|length }})</div>
+        <div class="pie-legend-item"><span class="pie-swatch" style="background: var(--amber);"></span> Missing ({{ analysis.missing_keywords|length }})</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="details-grid">
+  <div class="card lift">
+    <h3>&#10003; Matched keywords / skills</h3>
+    {% if analysis.matched_keywords %}
+      <div class="chip-list">
+        {% for kw in analysis.matched_keywords %}
+          <span class="chip chip-good">{{ kw }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No strong keyword matches were found yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="card lift">
+    <h3>&#33; Missing keywords / skills</h3>
+    {% if analysis.missing_keywords %}
+      <div class="chip-list">
+        {% for kw in analysis.missing_keywords %}
+          <span class="chip chip-missing">{{ kw }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">Great — no obvious keyword gaps found.</p>
+    {% endif %}
+  </div>
+
+  <div class="card lift">
+    <h3>Possible spelling issues</h3>
+    {% if analysis.spelling_errors %}
+      <div class="chip-list">
+        {% for word in analysis.spelling_errors %}
+          <span class="chip chip-warning">{{ word }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted">No spelling issues detected. Nice and clean.</p>
+    {% endif %}
+  </div>
+
+  <div class="card lift">
+    <h3>How to improve your score</h3>
+    <ul class="suggestion-list">
+      {% for tip in analysis.suggestions %}
+        <li>{{ tip }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}

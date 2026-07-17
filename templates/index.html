@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}ATS Analyzer — Scan Your Resume{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <span class="eyebrow">FREE &middot; INSTANT &middot; NO SIGN-UP</span>
+    <h1>Is your resume good enough to beat the ATS?</h1>
+    <p>Upload your resume and get an instant score out of 100, a breakdown of what's
+       working, missing keywords, spelling issues, and clear steps to improve —
+       whether or not you have a job description handy.</p>
+  </div>
+</section>
+
+<section class="upload-section">
+  <form action="{{ url_for('analyze') }}" method="POST" enctype="multipart/form-data" id="analyzeForm">
+    <div class="card upload-card">
+      <h2>1. Upload your resume</h2>
+      <label for="resumeInput" class="dropzone" id="dropzone">
+        <input type="file" name="resume" id="resumeInput" accept=".pdf,.docx" required hidden>
+        <div class="dropzone-icon">&#8593;</div>
+        <p class="dropzone-title">Drag &amp; drop your resume here</p>
+        <p class="dropzone-sub">or click to browse &middot; PDF or DOCX &middot; max 8MB</p>
+        <p class="dropzone-filename" id="fileNameDisplay"></p>
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>2. Tell us about the role</h2>
+      <div class="form-group">
+        <label for="job_title">Job title you're applying for</label>
+        <input type="text" id="job_title" name="job_title" placeholder="e.g. Frontend Developer, Data Analyst">
+      </div>
+
+      <div class="form-group">
+        <label for="job_description">
+          Job description <span class="optional-tag">(optional)</span>
+        </label>
+        <textarea id="job_description" name="job_description" rows="7"
+          placeholder="Paste the job description here for a more accurate, tailored score. Don't have one? Leave this blank — we'll score you against the skills expected for your target role."></textarea>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-primary btn-large" id="submitBtn">
+      Analyze My Resume
+    </button>
+  </form>
+</section>
+
+<section class="how-it-works">
+  <h2>How it works</h2>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Upload</h3>
+      <p>Drop in your resume as a PDF or Word document.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Analyze</h3>
+      <p>We scan formatting, keywords, experience quality, and spelling.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Improve</h3>
+      <p>Get a clear score, visual breakdown, and exact fixes to make.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const input = document.getElementById('resumeInput');
+  const fileNameDisplay = document.getElementById('fileNameDisplay');
+  const form = document.getElementById('analyzeForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  input.addEventListener('change', () => {
+    if (input.files.length) {
+      fileNameDisplay.textContent = "Selected: " + input.files[0].name;
+      dropzone.classList.add('has-file');
+    }
+  });
+
+  ['dragover', 'dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, e => e.preventDefault());
+  });
+  dropzone.addEventListener('dragover', () => dropzone.classList.add('dragging'));
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragging'));
+  dropzone.addEventListener('drop', e => {
+    dropzone.classList.remove('dragging');
+    if (e.dataTransfer.files.length) {
+      input.files = e.dataTransfer.files;
+      fileNameDisplay.textContent = "Selected: " + input.files[0].name;
+      dropzone.classList.add('has-file');
+    }
+  });
+
+  form.addEventListener('submit', () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Analyzing your resume...";
+  });
+</script>
+{% endblock %}

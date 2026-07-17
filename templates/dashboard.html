@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ATS Analyzer{% endblock %}
+
+{% block content %}
+<section class="dashboard-header">
+  <h1>Your scan history</h1>
+  <p>Track how your resume score improves over time as you make edits.</p>
+</section>
+
+{% if history %}
+<section class="card lift chart-card">
+  <h3>Score trend</h3>
+  {% if trend_points|length > 1 %}
+    <svg class="trend-svg" viewBox="0 0 {{ trend_width }} {{ trend_height }}" preserveAspectRatio="none">
+      <polyline
+        points="{{ polyline_str }}"
+        fill="none"
+        stroke="var(--green)"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round" />
+      {% for p in trend_points %}
+        <circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" fill="var(--green)" stroke="var(--card)" stroke-width="1.5">
+          <title>{{ p.date }}: {{ p.score }}/100</title>
+        </circle>
+      {% endfor %}
+    </svg>
+    <div class="trend-labels">
+      <span>{{ trend_points[0].date }}</span>
+      <span>{{ trend_points[-1].date }}</span>
+    </div>
+  {% else %}
+    <p class="muted">Scan at least two resumes to see a trend line.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="card lift">
+  <h3>Past scans</h3>
+  {% if history %}
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>File</th>
+          <th>Target Role</th>
+          <th>Domain</th>
+          <th>Score</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for h in history %}
+          <tr>
+            <td>{{ h.created_at[:10] }}</td>
+            <td>{{ h.filename }}</td>
+            <td>{{ h.job_title or "—" }}</td>
+            <td>{{ h.domain }}</td>
+            <td><span class="score-badge score-{{ 'good' if h.overall_score >= 80 else ('ok' if h.overall_score >= 60 else 'low') }}">{{ h.overall_score }}</span></td>
+            <td><a href="{{ url_for('view_history_scan', scan_id=h.id) }}" class="link">View report &rarr;</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">&#128203;</div>
+      <h3>No scans yet</h3>
+      <p>Run your first resume through the analyzer to start tracking your score over time.</p>
+      <a href="{{ url_for('index') }}" class="btn-secondary">Analyze your first resume</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
